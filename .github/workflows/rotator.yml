@@ -53,7 +53,7 @@ jobs:
       # ───────────────────────────────────────────────────────────
       # Debug Telegram ping (palīdz pārbaudīt TOKEN/CHAT_ID)
       # ───────────────────────────────────────────────────────────
-           - name: Debug Telegram ping (safe)
+      - name: Debug Telegram ping (safe)
         if: always()
         shell: bash
         env:
