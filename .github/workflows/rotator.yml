@@ -50,34 +50,4 @@ jobs:
         run: |
           python main.py
 
-      # ───────────────────────────────────────────────────────────
-      # Debug Telegram ping (palīdz pārbaudīt TOKEN/CHAT_ID)
-      # ───────────────────────────────────────────────────────────
-      - name: Debug Telegram ping (strict)
-        if: always()
-        shell: bash
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_IDS: ${{ secrets.TELEGRAM_CHAT_IDS }}
-        run: |
-          set -euo pipefail
-          if [[ -z "${TELEGRAM_BOT_TOKEN:-}" || -z "${TELEGRAM_CHAT_IDS:-}" ]]; then
-            echo "❌ TELEGRAM_BOT_TOKEN vai TELEGRAM_CHAT_IDS nav iestatīti."; exit 1
-          fi
-          FAIL=0
-          for CID in $(printf '%s' "$TELEGRAM_CHAT_IDS" | tr ',' ' '); do
-            CID_TRIMMED="$(echo "$CID" | xargs)"
-            echo "→ Pinging chat_id=$CID_TRIMMED"
-            RESP="$(curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-              -d chat_id="$CID_TRIMMED" \
-              -d text="Rotator debug ping $(date -u +%H:%M UTC)")"
-            echo "Telegram response: $RESP"
-            # Ja nav "ok":true → failo, lai redzētu kļūdu logā
-            if ! echo "$RESP" | grep -q '"ok":true'; then
-              echo "❌ Telegram 'ok' is false for chat_id=$CID_TRIMMED"
-              FAIL=1
-            fi
-            sleep 1
-          done
-          exit $FAIL
-
+     
