@@ -1,36 +1,30 @@
 import os
 from pydantic import BaseModel, Field, ValidationError
-from typing import List, Optional
+from typing import List
 
 class Settings(BaseModel):
-    # Filters & logic
-    WATCHLIST_MODE: str = Field(default="TOP100")  # TOP100 or MANUAL
-    MANUAL_SYMBOLS: List[str] = Field(default_factory=list)  # if WATCHLIST_MODE=MANUAL
+    WATCHLIST_MODE: str = Field(default="TOP100")
+    MANUAL_SYMBOLS: List[str] = Field(default_factory=list)
     MIN_24H_VOLUME_USD: float = 50_000_000
     MIN_24H_PCT: float = 3.0
     MA_PERIOD: int = 20
     RSI_THRESHOLD: float = 55.0
     ATR_PCT_MIN: float = 1.5
-    TIMEFRAME: str = "1h"  # '1h' | '4h' | '15m'
+    TIMEFRAME: str = "1h"
     TOP_N: int = 5
-    LANGUAGE: str = "LV"   # 'LV' or 'EN'
+    LANGUAGE: str = "LV"
     SHORT_FORMAT: bool = True
-
-    # Advice (entry/SL/TP) toggle
     ADVICE_ENABLED: bool = Field(default=True)
 
-    # Telegram
     TELEGRAM_BOT_TOKEN: str
-    TELEGRAM_CHAT_IDS: List[str]  # comma-separated input -> list
+    TELEGRAM_CHAT_IDS: List[str]
 
-    # Runtime
     COINGECKO_BASE: str = "https://api.coingecko.com/api/v3"
     COINBASE_BASE: str = "https://api.exchange.coinbase.com"
 
-    # State
     STATE_FILE: str = "last_top.json"
 
-def load_settings() -> Settings:
+def load_settings() -> 'Settings':
     env = {
         "WATCHLIST_MODE": os.getenv("WATCHLIST_MODE", "TOP100").upper(),
         "MANUAL_SYMBOLS": [s.strip().upper() for s in os.getenv("MANUAL_SYMBOLS", "").split(",") if s.strip()],
@@ -44,10 +38,18 @@ def load_settings() -> Settings:
         "LANGUAGE": os.getenv("LANGUAGE", "LV").upper(),
         "SHORT_FORMAT": os.getenv("SHORT_FORMAT", "true").lower() == "true",
         "ADVICE_ENABLED": os.getenv("ADVICE_ENABLED", "true").lower() == "true",
-        "TELEGRAM_BOT_TOKEN": os.getenv("TELEGRAM_BOT_TOKEN", ""),
+        "TELEGRAM_BOT_TOKEN": os.getenv("TELEGRAM_BOT_TOKEN", "").strip(),
         "TELEGRAM_CHAT_IDS": [x.strip() for x in os.getenv("TELEGRAM_CHAT_IDS", "").split(",") if x.strip()],
     }
     try:
-        return Settings(**env)
+        cfg = Settings(**env)
     except ValidationError as e:
         raise SystemExit(f"Config validation error: {e}")
+
+    # 👉 papildus stingrā pārbaude
+    if not cfg.TELEGRAM_BOT_TOKEN:
+        raise SystemExit("Config error: TELEGRAM_BOT_TOKEN is empty or missing.")
+    if not cfg.TELEGRAM_CHAT_IDS:
+        raise SystemExit("Config error: TELEGRAM_CHAT_IDS is empty or missing. Provide numeric chat IDs, comma-separated.")
+
+    return cfg
