@@ -44,10 +44,11 @@ else:
             ma = r.get("ma")
             rsi = r.get("rsi")
             base = (
-                f"{i}) {r['symbol']} {arrow}  {r['pct24h']:+.1f}% "
-                f"(Vol {fmt_usd(r['volume_usd'])})  MA{int(ma) if ma else '?'}  RSI {int(rsi) if rsi else '?'}"
-                f"{lab_str}"
-            )
+    f"{i}) {emoji} {r['symbol']} {arrow}  {r['pct24h']:+.1f}% "
+    f"(Vol {fmt_usd(r['volume_usd'])})  MA{int(ma) if ma else '?'}  RSI {int(rsi) if rsi else '?'}"
+    f"{lab_str}"
+)
+
             # Garajā formātā pievienojam ranga izmaiņu
             if long_format and prev_ranks:
                 prev = prev_ranks.get(r["symbol"])
