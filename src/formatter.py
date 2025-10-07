@@ -30,36 +30,43 @@ def build_message_lv(
         for i, r in enumerate(top_rows, 1):
             lab = labels.get(r["symbol"], "")
             lab_str = f" [{lab}]" if lab in {"NEW","KEEP"} else ""
-            arrow = r.get("arrow", "")
-            emoji = "⚪"
-if arrow == "↑":
-    emoji = "🟢"
-elif arrow == "↓":
-    emoji = "🔴"
-else:
-    emoji = "⚪"
 
+            arrow = r.get("arrow", "")
             if not detail_emoji:
                 arrow = ""
+
+            # Krāsainās emocijas pēc virziena
+            emoji = "⚪"
+            if arrow == "↑":
+                emoji = "🟢"
+            elif arrow == "↓":
+                emoji = "🔴"
+            else:
+                emoji = "⚪"
+
             ma = r.get("ma")
             rsi = r.get("rsi")
             base = (
-    f"{i}) {emoji} {r['symbol']} {arrow}  {r['pct24h']:+.1f}% "
-    f"(Vol {fmt_usd(r['volume_usd'])})  MA{int(ma) if ma else '?'}  RSI {int(rsi) if rsi else '?'}"
-    f"{lab_str}"
-)
+                f"{i}) {emoji} {r['symbol']} {arrow}  {r['pct24h']:+.1f}% "
+                f"(Vol {fmt_usd(r['volume_usd'])})  MA{int(ma) if ma else '?'}  RSI {int(rsi) if rsi else '?'}"
+                f"{lab_str}"
+            )
 
             # Garajā formātā pievienojam ranga izmaiņu
             if long_format and prev_ranks:
                 prev = prev_ranks.get(r["symbol"])
                 if prev is not None:
                     delta = prev - i
-                    if   delta > 0: ch = f" ↑{delta}"
-                    elif delta < 0: ch = f" ↓{abs(delta)}"
-                    else:           ch = " ="
+                    if delta > 0:
+                        ch = f" ↑{delta}"
+                    elif delta < 0:
+                        ch = f" ↓{abs(delta)}"
+                    else:
+                        ch = " ="
                     base += f"  (rangs: {prev}→{i}{ch})"
                 else:
                     base += "  (jauns ienācējs)"
+
             lines.append(base)
 
     if include_advice and top_rows:
@@ -68,7 +75,9 @@ else:
         for r in top_rows:
             adv = r.get("advice", {})
             if adv:
-                lines.append(f"• {r['symbol']}: entry {adv['entry']}, SL {adv['sl']}, TP1 {adv['tp1']}, TP2 {adv['tp2']} — {adv['advice']}")
+                lines.append(
+                    f"• {r['symbol']}: entry {adv['entry']}, SL {adv['sl']}, TP1 {adv['tp1']}, TP2 {adv['tp2']} — {adv['advice']}"
+                )
 
     if long_format and prev_ranks:
         drops = [s for s, lab in labels.items() if lab == "DROP"]
@@ -81,4 +90,5 @@ else:
     lines.append("Komentāri:")
     lines.append("• Top atlasīts pēc 24h momentuma, likviditātes un virs MA/RSI/ATR sliekšņiem.")
     lines.append("• Šī nav finanšu konsultācija. Izmanto savus risku parametrus.")
+
     return "\n".join(lines)
