@@ -37,6 +37,7 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_IDS: ${{ secrets.TELEGRAM_CHAT_IDS }}
           WATCHLIST_MODE: TOP100
+          # bāzes sliekšņi (paliek kā bija)
           MIN_24H_VOLUME_USD: "50000000"
           MIN_24H_PCT: "3.0"
           MA_PERIOD: "20"
@@ -46,7 +47,15 @@ jobs:
           TOP_N: "5"
           LANGUAGE: "LV"
           SHORT_FORMAT: "true"
-          ADVICE_ENABLED: "true"   # ja negribi entry/SL/TP, ieliec "false"
+          LONG_FORMAT: "true"      # ⬅ ieslēdz garo formātu
+          DETAIL_EMOJI: "true"     # ⬅ bultiņas ↑/↓/=
+          ADVICE_ENABLED: "true"
+
+          # (pēc vajadzības) TF-spec sliekšņi, piem. 4h stingrāks RSI:
+          # RSI_THRESHOLD_4H: "58"
+          # MIN_24H_PCT_4H: "2.0"
+          # ATR_PCT_MIN_4H: "1.2"
+
         run: |
           python main.py
 
