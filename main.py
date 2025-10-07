@@ -11,6 +11,8 @@ from src.notifier import send_telegram_message
 
 def main():
     cfg = load_settings()
+    # Redzamībā: cik čatu?
+    print(f"Found {len(cfg.TELEGRAM_CHAT_IDS)} Telegram chat IDs.")
 
     # 1) Pull CoinGecko Top-100
     markets = get_top100_markets_coingecko(cfg.COINGECKO_BASE)
