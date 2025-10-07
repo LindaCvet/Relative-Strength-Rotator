@@ -31,6 +31,14 @@ def build_message_lv(
             lab = labels.get(r["symbol"], "")
             lab_str = f" [{lab}]" if lab in {"NEW","KEEP"} else ""
             arrow = r.get("arrow", "")
+            emoji = "⚪"
+if arrow == "↑":
+    emoji = "🟢"
+elif arrow == "↓":
+    emoji = "🔴"
+else:
+    emoji = "⚪"
+
             if not detail_emoji:
                 arrow = ""
             ma = r.get("ma")
