@@ -2,6 +2,7 @@ name: Relative Strength Rotator (5x/day)
 
 on:
   schedule:
+    # 07:00, 11:00, 15:00, 19:00, 23:00 Rīga (vasarā UTC+3 → zemāk UTC)
     - cron: "0 4 * * *"
     - cron: "0 8 * * *"
     - cron: "0 12 * * *"
@@ -10,7 +11,7 @@ on:
   workflow_dispatch: {}
 
 permissions:
-  contents: write   # lai var ielikt 'last_top.json' izmaiņas repo
+  contents: write   # lai varam komitēt last_top.json izmaiņas
 
 jobs:
   run:
@@ -45,18 +46,25 @@ jobs:
           TOP_N: "5"
           LANGUAGE: "LV"
           SHORT_FORMAT: "true"
-          ADVICE_ENABLED: "true"    # ja gribi bez entry/SL/TP rindām -> ieliec false
+          ADVICE_ENABLED: "true"   # ja negribi entry/SL/TP, ieliec "false"
         run: |
           python main.py
 
-      - name: Commit state if changed
+      # ───────────────────────────────────────────────────────────
+      # Debug Telegram ping (palīdz pārbaudīt TOKEN/CHAT_ID)
+      # ───────────────────────────────────────────────────────────
+      - name: Debug Telegram ping
+        if: always()   # izpildās vienmēr, pat ja iepriekšējais solis būtu kļūdains
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_IDS: ${{ secrets.TELEGRAM_CHAT_IDS }}
         run: |
-          if [[ -n "$(git status --porcelain last_top.json)" ]]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add last_top.json
-            git commit -m "Update last_top.json (auto)"
-            git push
-          else
-            echo "No changes in last_top.json"
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_IDS" ]; then
+            echo "TELEGRAM_BOT_TOKEN vai TELEGRAM_CHAT_IDS nav iestatīti."
+            exit 1
           fi
+          IFS=',' read -ra IDS <<< "$TELEGRAM_CHAT_IDS"
+          for CID in "${IDS[@]}"; do
+            CID_TRIMMED="$(echo "$CID" | xargs)"
+            echo "Sūtām ping uz chat_id=$CID_TRIMMED"
+            curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/send
