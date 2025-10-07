@@ -53,7 +53,7 @@ jobs:
       # ───────────────────────────────────────────────────────────
       # Debug Telegram ping (palīdz pārbaudīt TOKEN/CHAT_ID)
       # ───────────────────────────────────────────────────────────
-      - name: Debug Telegram ping (safe)
+      - name: Debug Telegram ping (strict)
         if: always()
         shell: bash
         env:
@@ -62,18 +62,22 @@ jobs:
         run: |
           set -euo pipefail
           if [[ -z "${TELEGRAM_BOT_TOKEN:-}" || -z "${TELEGRAM_CHAT_IDS:-}" ]]; then
-            echo "TELEGRAM_BOT_TOKEN vai TELEGRAM_CHAT_IDS nav iestatīti."; exit 1
+            echo "❌ TELEGRAM_BOT_TOKEN vai TELEGRAM_CHAT_IDS nav iestatīti."; exit 1
           fi
-          # sadalām pēc komatiem, ignorējam atstarpes
+          FAIL=0
           for CID in $(printf '%s' "$TELEGRAM_CHAT_IDS" | tr ',' ' '); do
             CID_TRIMMED="$(echo "$CID" | xargs)"
-            echo "Pinging chat_id=$CID_TRIMMED"
-            # drukājam arī Telegram atbildi, lai redzētu kļūdas (chat not found utt.)
-            curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            echo "→ Pinging chat_id=$CID_TRIMMED"
+            RESP="$(curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
               -d chat_id="$CID_TRIMMED" \
-              -d text="Rotator debug ping $(date -u +%H:%M UTC)" \
-              -o /dev/stdout
-            echo
+              -d text="Rotator debug ping $(date -u +%H:%M UTC)")"
+            echo "Telegram response: $RESP"
+            # Ja nav "ok":true → failo, lai redzētu kļūdu logā
+            if ! echo "$RESP" | grep -q '"ok":true'; then
+              echo "❌ Telegram 'ok' is false for chat_id=$CID_TRIMMED"
+              FAIL=1
+            fi
             sleep 1
           done
+          exit $FAIL
 
